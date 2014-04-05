@@ -17,6 +17,7 @@ public class Quote {
     this.author = author;
     this.source = source;
     this.category = category;
+    category.quotes.add(this);
   }
 
   public String getText() {
@@ -36,6 +37,6 @@ public class Quote {
   }
   
   public void test(){
-    JOptionPane.showMessageDialog(null, "Works!\n" + getAuthor());
+    System.out.println(QuoteCat.listCats()[0]);
   }
 }
