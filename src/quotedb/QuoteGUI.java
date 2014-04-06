@@ -3,35 +3,32 @@
 package quotedb;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 public class QuoteGUI extends JFrame {
   
   public static QuoteGUI mainFrame = new QuoteGUI();
   public static int quoteIndex = -1;
   public static QuoteCat currentCat = null;
-
-  public static void main(String[] args) {
-    mainFrame.setLocationRelativeTo(null);
-    mainFrame.setVisible(true);
-    
-    QuoteCat qc = new QuoteCat("TestCat", 'P', null);
-    Quote q = new Quote("TextS", "Shakespeare", "Source (1101)", qc);
-    q = new Quote("TextA","Armour","Source (222)",qc);
-    currentCat = qc;
-  }
-  
   JButton btnPrev = new JButton("<-");
   JButton btnNext = new JButton("->");
   JButton btnAddQ = new JButton("Add Quote");
   JButton btnDeleteQ = new JButton("Delete Quote");
   JButton btnAddC = new JButton("Add Category");
   JButton btnDeleteC = new JButton("Delete Category");
-  JList lstCats = new JList(QuoteCat.listCats());
+  JButton btnLoad = new JButton("Load Quote File");
+  JList lstCats = new JList();
   JTextArea txtQuote = new JTextArea(10, 40);
   JTextField txtAuthor = new JTextField(40);
   JTextField txtSource = new JTextField(40);
+
+  public static void main(String[] args) {
+    mainFrame.setLocationRelativeTo(null);
+    mainFrame.setVisible(true);
+  }
   
   public QuoteGUI(){
     //INITIALIZING FRAME AND SETTING PROPERTIES
@@ -60,16 +57,37 @@ public class QuoteGUI extends JFrame {
     navPanel.add(btnNext, BorderLayout.EAST);
     displayPanel.add(navPanel);
     this.add(displayPanel, BorderLayout.CENTER);
-    
-    //LIST FOR CATEGORY DISPLAY IN GRID LAYOUT
-    JPanel catPanel = new JPanel(new FlowLayout());
-    catPanel.add(new LabeledComponent("Categories:", lstCats, BorderLayout.NORTH));
-    this.add(catPanel, BorderLayout.WEST);
-    
-    //POPULATE FIELDS
-    lstCats.setBackground(Color.GREEN);
+   
+    this.add(btnLoad, BorderLayout.WEST);
     
     //ACTION LISTENERS
+    btnLoad.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        JFileChooser fc = new JFileChooser("C:\\Users\\Evan\\Dropbox\\NetBeans\\QuoteDB");
+        int choice = fc.showOpenDialog(QuoteGUI.this);
+        if (choice == JFileChooser.APPROVE_OPTION) {
+          File xmlFile = fc.getSelectedFile();
+          if (QuoteCat.readFile(xmlFile)) {
+            btnLoad.setVisible(false);
+            currentCat = QuoteCat.categories.get(0);
+            lstCats.setListData(QuoteCat.listCats());
+            JPanel catPanel = new JPanel(new FlowLayout());
+            catPanel.add(new LabeledComponent("Categories:", lstCats, BorderLayout.NORTH));
+            mainFrame.add(catPanel, BorderLayout.WEST);
+          }
+        }
+      }
+    });
+    
+    lstCats.addListSelectionListener(new ListSelectionListener() {
+      public void valueChanged(ListSelectionEvent lse) {
+        System.out.println(lstCats.getSelectedIndex());
+        currentCat = QuoteCat.categories.get(lstCats.getSelectedIndex());
+        quoteIndex = 0;
+        dispQuote();
+      }
+    });
+    
     btnAddQ.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
         QuoteCat.writeXML();
@@ -78,9 +96,9 @@ public class QuoteGUI extends JFrame {
     
     btnNext.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        if(quoteIndex < currentCat.quotes.size()) {
+        if(quoteIndex < currentCat.quotes.size() - 1) {
           quoteIndex++;
-          dispQuote(quoteIndex);
+          dispQuote();
         }
       }
     });
@@ -89,13 +107,13 @@ public class QuoteGUI extends JFrame {
       public void actionPerformed(ActionEvent ae) {
         if(quoteIndex > 0){
           quoteIndex--;
-          dispQuote(quoteIndex);
+          dispQuote();
         }
       }
     });
   }
   
-  public void dispQuote(int quoteIndex) {
+  public void dispQuote() {
     Quote q = currentCat.quotes.get(quoteIndex);
     txtQuote.setText(q.getText());
     txtAuthor.setText(q.getAuthor());

@@ -15,14 +15,13 @@ public class QuoteCat {
   
   private String name;
   private char type; // T = Topic, P = Person
-  private File file;
   public ArrayList<Quote> quotes = new ArrayList();
   public static ArrayList<QuoteCat> categories = new ArrayList();
+  public static File xmlLocation = new File("quotes.xml");
 
-  public QuoteCat(String name, char type, File file){
+  public QuoteCat(String name, char type){
     this.name = name;
     this.type = type;
-    this.file = file;
     this.quotes = new ArrayList<Quote>();
     categories.add(this);
   }
@@ -63,7 +62,8 @@ public class QuoteCat {
       
       for(int i=0;i<categories.size();i++) {
         QuoteCat cat = categories.get(i);
-        Element category = doc.createElement(cat.getName());
+        Element category = doc.createElement("Category");
+        category.setAttribute("name", cat.getName());
         root.appendChild(category);
         for(int j=0;j<cat.quotes.size();j++) {
           Quote q = cat.quotes.get(j);
@@ -91,7 +91,7 @@ public class QuoteCat {
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
       DOMSource domSource = new DOMSource(doc);
-      StreamResult streamResult = new StreamResult(new File("createFile.xml"));
+      StreamResult streamResult = new StreamResult(xmlLocation);
 
       transformer.transform(domSource, streamResult);
       
@@ -103,8 +103,36 @@ public class QuoteCat {
     }
   }
   
-  public static boolean readFile(){
-    return true;
+  public static boolean readFile(File xmlFile){
+    xmlLocation = xmlFile;
+    try {
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      Document doc = builder.parse(xmlFile);
+      
+      NodeList categories = doc.getElementsByTagName("Category");
+      for (int i=0; i<categories.getLength(); i++) {
+        Element category = (Element) categories.item(i);
+        String name = category.getAttribute("name");
+        char type = category.getAttribute("type").charAt(0);
+        QuoteCat currCat = new QuoteCat(name, type);
+        NodeList quotes = category.getElementsByTagName("Quote");
+        for (int j=0; j<quotes.getLength(); j++) {
+          Element quote = (Element) quotes.item(j);
+          NodeList quoteContents = quote.getChildNodes();
+          //Empty node of newline between each actual text element for some reason
+          String text = quoteContents.item(1).getTextContent();
+          String author = quoteContents.item(3).getTextContent();
+          String source = quoteContents.item(5).getTextContent();
+          new Quote(text, author, source, currCat);
+        }
+      }
+      return true;
+    }
+    catch (Exception e) {
+      System.out.println(e.toString());
+      return false;
+    }
   }
 
   public String getName() {
@@ -121,13 +149,5 @@ public class QuoteCat {
 
   public void setType(char type) {
     this.type = type;
-  }
-
-  public File getFile() {
-    return file;
-  }
-
-  public void setFile(File file) {
-    this.file = file;
   }
 }
