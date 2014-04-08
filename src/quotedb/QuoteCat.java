@@ -30,9 +30,16 @@ public class QuoteCat {
     this.quotes.add(quote);
   }
   
+  public void removeQuote(Quote quote){
+    this.quotes.remove(quote);
+  }
+  
   public void dispQuote(int index){
     Quote dispQ = (Quote) this.quotes.get(index);
-    dispQ.test();
+  }
+  
+  public void remove(){
+    categories.remove(this);
   }
   
   public void outputQuotes(){
@@ -64,6 +71,7 @@ public class QuoteCat {
         QuoteCat cat = categories.get(i);
         Element category = doc.createElement("Category");
         category.setAttribute("name", cat.getName());
+        category.setAttribute("type", String.valueOf(cat.getType()));
         root.appendChild(category);
         for(int j=0;j<cat.quotes.size();j++) {
           Quote q = cat.quotes.get(j);

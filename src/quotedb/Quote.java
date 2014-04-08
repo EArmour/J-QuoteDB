@@ -17,7 +17,7 @@ public class Quote {
     this.author = author;
     this.source = source;
     this.category = category;
-    category.quotes.add(this);
+    category.addQuote(this);
   }
 
   public String getText() {
@@ -36,7 +36,7 @@ public class Quote {
     return category;
   }
   
-  public void test(){
-    System.out.println(QuoteCat.listCats()[0]);
+  public void remove(){
+    category.removeQuote(this);
   }
 }

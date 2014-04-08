@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -13,6 +14,7 @@ public class QuoteGUI extends JFrame {
   public static QuoteGUI mainFrame = new QuoteGUI();
   public static int quoteIndex = -1;
   public static QuoteCat currentCat = null;
+  public static Quote currentQuote = null;
   JButton btnPrev = new JButton("<-");
   JButton btnNext = new JButton("->");
   JButton btnAddQ = new JButton("Add Quote");
@@ -20,12 +22,20 @@ public class QuoteGUI extends JFrame {
   JButton btnAddC = new JButton("Add Category");
   JButton btnDeleteC = new JButton("Delete Category");
   JButton btnLoad = new JButton("Load Quote File");
+  JLabel lblStatus = new JLabel("Ready to go!");
   JList lstCats = new JList();
   JTextArea txtQuote = new JTextArea(10, 40);
   JTextField txtAuthor = new JTextField(40);
   JTextField txtSource = new JTextField(40);
 
   public static void main(String[] args) {
+    mainFrame.addWindowListener(new WindowAdapter() {
+      @Override
+      public void windowClosing(WindowEvent e) {
+        QuoteCat.writeXML();
+      }
+    });
+    
     mainFrame.setLocationRelativeTo(null);
     mainFrame.setVisible(true);
   }
@@ -49,10 +59,14 @@ public class QuoteGUI extends JFrame {
     
     //TEXT FIELDS FOR OUTPUT IN FLOW LAYOUT
     JPanel displayPanel = new JPanel(new FlowLayout());
+    txtQuote.setWrapStyleWord(true);
+    txtQuote.setLineWrap(true);
     displayPanel.add(new LabeledComponent("Quote", txtQuote, BorderLayout.WEST, SwingConstants.TOP));
     displayPanel.add(new LabeledComponent("Author", txtAuthor, BorderLayout.WEST));
     displayPanel.add(new LabeledComponent("Source", txtSource, BorderLayout.WEST));
     JPanel navPanel = new JPanel(new BorderLayout());
+    lblStatus.setBorder(new EmptyBorder(0, 0, 0, 200));
+    navPanel.add(lblStatus, BorderLayout.WEST);
     navPanel.add(btnPrev, BorderLayout.CENTER);
     navPanel.add(btnNext, BorderLayout.EAST);
     displayPanel.add(navPanel);
@@ -63,7 +77,7 @@ public class QuoteGUI extends JFrame {
     //ACTION LISTENERS
     btnLoad.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        JFileChooser fc = new JFileChooser("C:\\Users\\Evan\\Dropbox\\NetBeans\\QuoteDB");
+        JFileChooser fc = new JFileChooser("C:\\Temp");
         int choice = fc.showOpenDialog(QuoteGUI.this);
         if (choice == JFileChooser.APPROVE_OPTION) {
           File xmlFile = fc.getSelectedFile();
@@ -74,6 +88,7 @@ public class QuoteGUI extends JFrame {
             JPanel catPanel = new JPanel(new FlowLayout());
             catPanel.add(new LabeledComponent("Categories:", lstCats, BorderLayout.NORTH));
             mainFrame.add(catPanel, BorderLayout.WEST);
+            lblStatus.setText("XML file loaded!");
           }
         }
       }
@@ -81,16 +96,58 @@ public class QuoteGUI extends JFrame {
     
     lstCats.addListSelectionListener(new ListSelectionListener() {
       public void valueChanged(ListSelectionEvent lse) {
-        System.out.println(lstCats.getSelectedIndex());
-        currentCat = QuoteCat.categories.get(lstCats.getSelectedIndex());
-        quoteIndex = 0;
-        dispQuote();
+        if (lstCats.getSelectedIndex() > -1) {
+          currentCat = QuoteCat.categories.get(lstCats.getSelectedIndex());
+          quoteIndex = 0;
+          if (currentCat.quotes.isEmpty()){
+            txtQuote.setText("");
+            txtAuthor.setText("");
+            txtSource.setText("");
+          }
+          else {
+            dispQuote();
+          }
+        }
       }
     });
     
     btnAddQ.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-        QuoteCat.writeXML();
+        new Quote(txtQuote.getText(), txtAuthor.getText(), txtSource.getText(), currentCat);
+        lblStatus.setText("Quote added!");
+      }
+    });
+    
+    btnDeleteQ.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        currentQuote.remove();
+        if(quoteIndex > 0){
+          quoteIndex--;
+          dispQuote();
+        }
+        lblStatus.setText("Quote deleted!");
+      }
+    });
+        
+    btnAddC.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        String cName = JOptionPane.showInputDialog(null, "Please enter the new category's name:");
+        String[] types = {"Topic", "Person"};
+        Object cType = JOptionPane.showInputDialog(null, "What type of category is is?", "Type Selection", 1, null, types, types[0]);
+        currentCat = new QuoteCat(cName, cType.toString().charAt(0));
+        lstCats.setListData(QuoteCat.listCats());
+        lstCats.setSelectedValue(currentCat.getName(), true);
+        lblStatus.setText("Category added!");
+      }
+    });
+            
+    btnDeleteC.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent ae) {
+        currentCat.remove();
+        lblStatus.setText("Category deleted!");
+        currentCat = QuoteCat.categories.get(0);
+        lstCats.setListData(QuoteCat.listCats());
+        lstCats.setSelectedIndex(0);
       }
     });
     
@@ -114,10 +171,10 @@ public class QuoteGUI extends JFrame {
   }
   
   public void dispQuote() {
-    Quote q = currentCat.quotes.get(quoteIndex);
-    txtQuote.setText(q.getText());
-    txtAuthor.setText(q.getAuthor());
-    txtSource.setText(q.getSource());
+    currentQuote = currentCat.quotes.get(quoteIndex);
+    txtQuote.setText(currentQuote.getText());
+    txtAuthor.setText(currentQuote.getAuthor());
+    txtSource.setText(currentQuote.getSource());
   }
   
   class LabeledComponent extends JPanel {
