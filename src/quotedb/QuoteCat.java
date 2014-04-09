@@ -26,6 +26,23 @@ public class QuoteCat {
     categories.add(this);
   }
   
+  public static void sortCategories() {
+    ArrayList<QuoteCat> personCats = new ArrayList();
+    
+    for(int i=0;i<categories.size();i++) {
+      if(categories.get(i).getType() == 'P'){
+        personCats.add(categories.get(i));
+      }
+    }
+    categories.removeAll(personCats);
+    Collections.sort(categories, new CompareCat());
+    Collections.sort(personCats, new CompareCat());
+    
+    for(int j=0;j<personCats.size();j++) {
+      categories.add(personCats.get(j));
+    }
+  }
+  
   public void addQuote(Quote quote){
     this.quotes.add(quote);
   }
@@ -52,6 +69,7 @@ public class QuoteCat {
   }
   
   public static String[] listCats() {
+    sortCategories();
     ArrayList<String> arrayList = new ArrayList();
     for(int i=0;i<categories.size();i++){
       arrayList.add(categories.get(i).getName());
@@ -135,6 +153,7 @@ public class QuoteCat {
           new Quote(text, author, source, currCat);
         }
       }
+      sortCategories();
       return true;
     }
     catch (Exception e) {
@@ -157,5 +176,12 @@ public class QuoteCat {
 
   public void setType(char type) {
     this.type = type;
+  }
+  
+  static class CompareCat implements Comparator<QuoteCat> {
+    @Override
+    public int compare(QuoteCat c1, QuoteCat c2) {
+      return c1.getName().compareToIgnoreCase(c2.getName());
+    }
   }
 }

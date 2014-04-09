@@ -25,6 +25,7 @@ public class QuoteGUI extends JFrame {
   JLabel lblStatus = new JLabel("Ready to go!");
   JList lstCats = new JList();
   JTextArea txtQuote = new JTextArea(10, 40);
+  JScrollPane scrlQuote = new JScrollPane(txtQuote);
   JTextField txtAuthor = new JTextField(40);
   JTextField txtSource = new JTextField(40);
 
@@ -32,7 +33,9 @@ public class QuoteGUI extends JFrame {
     mainFrame.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosing(WindowEvent e) {
-        QuoteCat.writeXML();
+        if(currentCat != null) {
+          QuoteCat.writeXML();
+        }
       }
     });
     
@@ -61,7 +64,7 @@ public class QuoteGUI extends JFrame {
     JPanel displayPanel = new JPanel(new FlowLayout());
     txtQuote.setWrapStyleWord(true);
     txtQuote.setLineWrap(true);
-    displayPanel.add(new LabeledComponent("Quote", txtQuote, BorderLayout.WEST, SwingConstants.TOP));
+    displayPanel.add(new LabeledComponent("Quote", scrlQuote, BorderLayout.WEST, SwingConstants.TOP));
     displayPanel.add(new LabeledComponent("Author", txtAuthor, BorderLayout.WEST));
     displayPanel.add(new LabeledComponent("Source", txtSource, BorderLayout.WEST));
     JPanel navPanel = new JPanel(new BorderLayout());
@@ -100,9 +103,7 @@ public class QuoteGUI extends JFrame {
           currentCat = QuoteCat.categories.get(lstCats.getSelectedIndex());
           quoteIndex = 0;
           if (currentCat.quotes.isEmpty()){
-            txtQuote.setText("");
-            txtAuthor.setText("");
-            txtSource.setText("");
+            emptyFields();
           }
           else {
             dispQuote();
@@ -157,6 +158,10 @@ public class QuoteGUI extends JFrame {
           quoteIndex++;
           dispQuote();
         }
+        else if (quoteIndex == currentCat.quotes.size() - 1) {
+          quoteIndex++;
+          emptyFields();
+        }
       }
     });
     
@@ -175,6 +180,15 @@ public class QuoteGUI extends JFrame {
     txtQuote.setText(currentQuote.getText());
     txtAuthor.setText(currentQuote.getAuthor());
     txtSource.setText(currentQuote.getSource());
+    txtQuote.setCaretPosition(0);
+  }
+  
+  public void emptyFields() {
+    if (currentCat.getType() != 'P') {
+      txtAuthor.setText(currentCat.getName());
+    }
+    txtQuote.setText("");
+    txtSource.setText("");
   }
   
   class LabeledComponent extends JPanel {
