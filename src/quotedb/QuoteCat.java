@@ -1,10 +1,6 @@
-/*
- * Name, Type (topic/person), File Location, Length?
-*/
 package quotedb;
 import java.io.*;
 import java.util.*;
-import javax.swing.*;
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.*;
@@ -12,7 +8,7 @@ import javax.xml.transform.stream.*;
 import org.w3c.dom.*;
 
 public class QuoteCat {
-  
+
   private String name;
   private char type; // T = Topic, P = Person
   public ArrayList<Quote> quotes = new ArrayList();

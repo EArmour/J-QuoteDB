@@ -48,9 +48,6 @@ public class QuoteGUI extends JFrame {
     setTitle("Quote Database");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setSize(675, 350);
-//    txtQuote.setEditable(false);
-//    txtAuthor.setEditable(false);
-//    txtSource.setEditable(false);
 
     //GUI BUTTONS IN GRID LAYOUT
     JPanel buttonPanel = new JPanel(new GridLayout());
@@ -60,10 +57,25 @@ public class QuoteGUI extends JFrame {
     buttonPanel.add(btnDeleteQ);
     this.add(buttonPanel, BorderLayout.SOUTH);
     
-    //TEXT FIELDS FOR OUTPUT IN FLOW LAYOUT
-    JPanel displayPanel = new JPanel(new FlowLayout());
+    //Tweak text field settings (word wrap, disable tabbing)
     txtQuote.setWrapStyleWord(true);
     txtQuote.setLineWrap(true);
+    txtQuote.addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+          if (e.getKeyCode() == KeyEvent.VK_TAB) {
+            if (e.getModifiers() > 0) {
+                txtQuote.transferFocusBackward();
+            } else {
+                txtQuote.transferFocus();
+            }
+            e.consume();
+          }
+        }
+      });
+    
+    //TEXT FIELDS FOR OUTPUT IN FLOW LAYOUT
+    JPanel displayPanel = new JPanel(new FlowLayout());
     displayPanel.add(new LabeledComponent("Quote", scrlQuote, BorderLayout.WEST, SwingConstants.TOP));
     displayPanel.add(new LabeledComponent("Author", txtAuthor, BorderLayout.WEST));
     displayPanel.add(new LabeledComponent("Source", txtSource, BorderLayout.WEST));
@@ -74,7 +86,6 @@ public class QuoteGUI extends JFrame {
     navPanel.add(btnNext, BorderLayout.EAST);
     displayPanel.add(navPanel);
     this.add(displayPanel, BorderLayout.CENTER);
-   
     this.add(btnLoad, BorderLayout.WEST);
     
     //ACTION LISTENERS
@@ -154,6 +165,7 @@ public class QuoteGUI extends JFrame {
     
     btnNext.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
+        lblStatus.setText("");
         if(quoteIndex < currentCat.quotes.size() - 1) {
           quoteIndex++;
           dispQuote();
@@ -167,9 +179,14 @@ public class QuoteGUI extends JFrame {
     
     btnPrev.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
+        lblStatus.setText("");
         if(quoteIndex > 0){
           quoteIndex--;
           dispQuote();
+        }
+        else if (quoteIndex == 0) {
+          quoteIndex--;
+          emptyFields();
         }
       }
     });
@@ -184,8 +201,11 @@ public class QuoteGUI extends JFrame {
   }
   
   public void emptyFields() {
-    if (currentCat.getType() != 'P') {
+    if (currentCat.getType() == 'P') {
       txtAuthor.setText(currentCat.getName());
+    }
+    else {
+      txtAuthor.setText((""));
     }
     txtQuote.setText("");
     txtSource.setText("");

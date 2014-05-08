@@ -1,9 +1,4 @@
-/*
- * Text, Author, Source (optional), Category
- * 
-*/
 package quotedb;
-import javax.swing.*;
 
 public class Quote {
   
