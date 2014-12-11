@@ -4,8 +4,14 @@ package quotedb;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -25,7 +31,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -38,6 +43,7 @@ public class QuoteGUI extends JFrame {
 	public static Quote currentQuote = null;
 	JButton btnPrev = new JButton("<-");
 	JButton btnNext = new JButton("->");
+	JButton btnCopy = new JButton("Copy");
 	JButton btnAddQ = new JButton("Add Quote");
 	JButton btnDeleteQ = new JButton("Delete Quote");
 	JButton btnAddC = new JButton("Add Category");
@@ -57,17 +63,18 @@ public class QuoteGUI extends JFrame {
 			public void windowClosing(WindowEvent e) {
 				if (currentCat != null) {
 					int choice = JOptionPane
-							.showConfirmDialog(
-									mainFrame,
+							.showConfirmDialog(mainFrame,
 									"Do you wish to save the changes you have made in this session?",
-									"Save Changes",
-									JOptionPane.YES_NO_CANCEL_OPTION);
+									"Save Changes", JOptionPane.YES_NO_CANCEL_OPTION);
 					if (choice == JOptionPane.YES_OPTION) {
 						QuoteCat.writeXML();
 						mainFrame.dispose();
 					} else if (choice == JOptionPane.NO_OPTION) {
 						mainFrame.dispose();
 					}
+				}
+				else {
+					mainFrame.dispose();
 				}
 			}
 		});
@@ -109,18 +116,25 @@ public class QuoteGUI extends JFrame {
 
 		// TEXT FIELDS FOR OUTPUT IN FLOW LAYOUT
 		JPanel displayPanel = new JPanel(new FlowLayout());
-		displayPanel.add(new LabeledComponent("Quote", scrlQuote,
-				BorderLayout.WEST, SwingConstants.TOP));
-		displayPanel.add(new LabeledComponent("Author", txtAuthor,
-				BorderLayout.WEST));
-		displayPanel.add(new LabeledComponent("Source", txtSource,
-				BorderLayout.WEST));
-		JPanel navPanel = new JPanel(new BorderLayout());
-		lblStatus.setBorder(new EmptyBorder(0, 0, 0, 200));
-		navPanel.add(lblStatus, BorderLayout.WEST);
-		navPanel.add(btnPrev, BorderLayout.CENTER);
-		navPanel.add(btnNext, BorderLayout.EAST);
+		displayPanel.add(new LabeledComponent("Quote", scrlQuote, BorderLayout.WEST, SwingConstants.TOP));
+		displayPanel.add(new LabeledComponent("Author", txtAuthor, BorderLayout.WEST));
+		displayPanel.add(new LabeledComponent("Source", txtSource, BorderLayout.WEST));
+		JPanel navPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+
+		c.gridx = 1;
+		navPanel.add(btnPrev, c);
+
+		c.gridx = 2;
+		navPanel.add(btnNext, c);
+
+		c.weightx = 1.0;
+		c.gridx = 0;
+		lblStatus.setPreferredSize(new Dimension(200, 50));
+		navPanel.add(lblStatus, c);
+
 		displayPanel.add(navPanel);
+		displayPanel.add(btnCopy);
 		this.add(displayPanel, BorderLayout.CENTER);
 		this.add(btnLoad, BorderLayout.WEST);
 
@@ -240,6 +254,25 @@ public class QuoteGUI extends JFrame {
 				} else if (quoteIndex == 0) {
 					quoteIndex--;
 					emptyFields();
+				}
+			}
+		});
+
+		btnCopy.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				Quote q = currentQuote;
+				if (q != null) {
+					try {
+						Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+
+						clipboard.setContents(
+								new StringSelection("\"" + q.getText() + "\" - " + q.getAuthor() + " (" + q.getSource() + ")"),
+								null);
+						JOptionPane.showMessageDialog(null, "Quote copied to clipboard.", "Quote Copied", JOptionPane.INFORMATION_MESSAGE);
+					} catch (Exception e) {
+						JOptionPane.showMessageDialog(null, "Unable to copy quote text to clipboard.", "Error Copying Text", JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			}
 		});
