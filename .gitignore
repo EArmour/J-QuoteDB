@@ -5,3 +5,8 @@ build.xml
 createFile.xml
 manifest.mf
 /dist/
+/bin/
+
+.classpath
+.project
+.settings/
